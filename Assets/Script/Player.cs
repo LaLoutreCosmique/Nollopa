@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,18 +7,25 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
 namespace Script
 {
     public class Player : MonoBehaviour
     {
+        public enum NerfColor
+        {
+            Black,
+            Green,
+            Red,
+            Orange
+        }
+
+        const int EscapeKeyCode = 1769499;
         public UnityEvent onDie;
 
         [SerializeField] Transform startPoint;
         [SerializeField] Transform endPoint;
         [SerializeField] ParticleSystem deathParticle;
-        Animator m_Anim;
 
         [SerializeField] WordFX wordFX;
         [SerializeField] ComboFX comboFX;
@@ -32,18 +38,17 @@ namespace Script
         [SerializeField] Sprite FullfillHeart;
         [SerializeField] Sprite EmptyHeart;
 
+        readonly int m_AttackAnim = Animator.StringToHash("Attack");
+        readonly int m_DeathAnim = Animator.StringToHash("Death");
+        readonly int m_HurtAnim = Animator.StringToHash("Hurt");
+        readonly int m_IdleAnim = Animator.StringToHash("Idle");
+        readonly int m_WalkAnim = Animator.StringToHash("Walk");
+        int combo;
+        Animator m_Anim;
+        int m_CharIndex;
+
         Enemy m_Enemy;
         string m_Word;
-        int m_CharIndex;
-        int combo;
-
-        const int EscapeKeyCode = 1769499;
-
-        readonly int m_AttackAnim = Animator.StringToHash("Attack");
-        readonly int m_IdleAnim = Animator.StringToHash("Idle");
-        readonly int m_HurtAnim = Animator.StringToHash("Hurt");
-        readonly int m_DeathAnim = Animator.StringToHash("Death");
-        readonly int m_WalkAnim = Animator.StringToHash("Walk");
 
         public bool IsAttacking => m_Enemy != null;
 
@@ -57,14 +62,15 @@ namespace Script
             StartCoroutine(FillHearts());
             m_Anim.SetTrigger(m_WalkAnim);
             transform.position = startPoint.position;
-            transform.DOMove(endPoint.position, 2f).SetEase(Ease.Linear).onComplete = () => m_Anim.SetTrigger(m_IdleAnim);
+            transform.DOMove(endPoint.position, 2f).SetEase(Ease.Linear).onComplete =
+                () => m_Anim.SetTrigger(m_IdleAnim);
         }
 
         void OnEnable()
         {
             Keyboard.current.onTextInput += GetKeyInput;
         }
-        
+
         void OnDisable()
         {
             Keyboard.current.onTextInput -= GetKeyInput;
@@ -74,21 +80,16 @@ namespace Script
         {
             if (input.GetHashCode() == EscapeKeyCode)
             {
-                print("OK");
                 GameManager.Instance.TogglePause();
                 return;
             }
-            
+
             if (m_Word == null || GameManager.Instance.GamePaused) return;
 
             if (input == m_Word[m_CharIndex])
-            {
                 ValidChar();
-            }
             else
-            {
                 WrongChar();
-            }
         }
 
         void ValidChar()
@@ -97,15 +98,16 @@ namespace Script
             wordFX.Press();
 
             if (m_CharIndex != m_Word.Length) return;
-            
+
             if (m_Enemy != null)
+            {
                 Attack();
+            }
             else if (m_Word == "rejouer")
             {
                 GameManager.Instance.RestartGame();
                 wordFX.Finish();
             }
-            
         }
 
         void WrongChar()
@@ -151,7 +153,7 @@ namespace Script
         public void StartAttack(Enemy enemy)
         {
             SetWord(GameManager.Instance.GetWord(enemy.difficulty));
-            
+
             m_Enemy = enemy;
             m_CharIndex = 0;
         }
@@ -164,49 +166,57 @@ namespace Script
                 StartCoroutine(wordFX.DisplayWord(word, new Dictionary<int, NerfColor>()));
                 return;
             }
-            
-            m_Word = ApplyNerf(word, out Dictionary<int, NerfColor> nerfData);
+
+            m_Word = ApplyNerf(word, out var nerfData);
 
             StartCoroutine(wordFX.DisplayWord(word, nerfData));
-            
-            print(m_Word);
         }
 
         string ApplyNerf(string word, out Dictionary<int, NerfColor> nerfData)
         {
             nerfData = new Dictionary<int, NerfColor>();
-            PhaseData currPhase = GameManager.Instance.CurrentPhase;
-            StringBuilder wordToWrite = new StringBuilder(word);
-            int nerfIndex;
+            var currPhase = GameManager.Instance.CurrentPhase;
+            var wordToWrite = new StringBuilder(word);
+
+            // Orange nerf
+            if (currPhase.orangeNerf)
+            {
+                var nerfIndex1 = DrawIndex(nerfData.Keys.ToArray(), word.Length);
+                var char1 = wordToWrite[nerfIndex1];
+                nerfData.Add(nerfIndex1, NerfColor.Orange);
+
+                var nerfIndex2 = DrawIndex(nerfData.Keys.ToArray(), word.Length);
+                var char2 = wordToWrite[nerfIndex2];
+                nerfData.Add(nerfIndex2, NerfColor.Orange);
+
+                wordToWrite.Replace(char1, char2, nerfIndex1, 1);
+                wordToWrite.Replace(char2, char1, nerfIndex2, 1);
+            }
 
             // Red nerf
-            for (int i = 0; i < currPhase.redNerf; i++)
+            for (var i = 0; i < currPhase.redNerf; i++)
             {
                 if (word.Length <= nerfData.Count + i) break;
 
-                nerfIndex = DrawIndex(nerfData.Keys.ToArray(), word.Length);
+                var nerfIndex = DrawIndex(nerfData.Keys.ToArray(), word.Length);
                 wordToWrite.Remove(GetIndexToModif(nerfIndex, nerfData), 1);
                 nerfData.Add(nerfIndex, NerfColor.Red);
-                
-                print("draw" + nerfIndex);
             }
-            
+
             // Green nerf
-            for (int i = 0; i < currPhase.greenNerf; i++)
+            for (var i = 0; i < currPhase.greenNerf; i++)
             {
                 if (word.Length <= nerfData.Count) break;
-                
-                nerfIndex = DrawIndex(nerfData.Keys.ToArray(), word.Length);
-                int indexToModif = GetIndexToModif(nerfIndex, nerfData);
+
+                var nerfIndex = DrawIndex(nerfData.Keys.ToArray(), word.Length);
+                var indexToModif = GetIndexToModif(nerfIndex, nerfData);
                 wordToWrite.Insert(indexToModif, wordToWrite[indexToModif]);
                 nerfData.Add(nerfIndex, NerfColor.Green);
-                
-                print("draw : " + nerfIndex);
             }
-            
+
             return wordToWrite.ToString();
         }
-        
+
         int DrawIndex(int[] bannedIndexes, int maxIndex)
         {
             int index;
@@ -220,7 +230,6 @@ namespace Script
         int GetIndexToModif(int indexDrew, Dictionary<int, NerfColor> nerfData)
         {
             foreach (var nerf in nerfData.Where(nerf => indexDrew > nerf.Key))
-            {
                 switch (nerf.Value)
                 {
                     case NerfColor.Green:
@@ -230,30 +239,28 @@ namespace Script
                         indexDrew--;
                         break;
                 }
-            }
-
-            print("to modif : " + indexDrew);
+            
             return indexDrew;
         }
 
         /// <summary>
-        /// Reduce player health
+        ///     Reduce player health
         /// </summary>
         /// <param name="value">Damage dealt</param>
         /// <returns>True if player dies</returns>
         public bool Hurt(int value)
         {
-            for (int i = 0; i < value; i++)
-            {
+            for (var i = 0; i < value; i++)
                 if (health - (i + 1) >= 0)
                     Hearts[health - (i + 1)].sprite = EmptyHeart;
-            }
-            
+
             health -= value;
             ResetCombo();
-            
+
             if (health > 0)
+            {
                 m_Anim.SetTrigger(m_HurtAnim);
+            }
             else
             {
                 Die();
@@ -280,7 +287,7 @@ namespace Script
 
         IEnumerator FillHearts()
         {
-            foreach (Image heart in Hearts)
+            foreach (var heart in Hearts)
             {
                 yield return new WaitForSeconds(0.5f);
                 heart.sprite = FullfillHeart;
@@ -293,14 +300,6 @@ namespace Script
             SoundFX.Instance.PlaySound(SoundType.Disappear);
             Start();
             health = 3;
-        }
-
-        public enum NerfColor
-        {
-            Black,
-            Green,
-            Red,
-            Orange
         }
     }
 }

@@ -35,7 +35,7 @@ namespace Script
             newSource.clip = sound.clip;
             newSource.volume = sound.volume;
             newSource.Play();
-            Destroy(newSource, newSource.clip.length);
+            Destroy(newSource.gameObject, newSource.clip.length);
         }
         
         [System.Serializable]

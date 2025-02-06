@@ -11,6 +11,8 @@ namespace Script
     {
         public Player.NerfColor color;
         public bool PressTwice => m_PressTwice;
+        public bool IsPressed => m_CurrentDown == spriteRenderer.sprite;
+        public bool HasMoved => transform.position != m_InitPos;
         
         [SerializeField] SpriteRenderer spriteRenderer;
         
