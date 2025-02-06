@@ -13,6 +13,7 @@ namespace Script
         List<KeyFX> m_Keys = new ();
         int index;
         bool canShake = true;
+        bool orangesHasMoved;
 
         public IEnumerator DisplayWord(string word, Dictionary<int, Player.NerfColor> nerfData)
         {
@@ -53,8 +54,12 @@ namespace Script
                         secondIndex = i;
                     }
                 }
-                if (!m_Keys[firstIndex].HasMoved && m_Keys[firstIndex].color == Player.NerfColor.Orange)
+
+                if (!orangesHasMoved && m_Keys[firstIndex].color == Player.NerfColor.Orange)
+                {
+                    orangesHasMoved = true;
                     InvertLetters(m_Keys[firstIndex], m_Keys[secondIndex]);
+                }
             }
 
             if (m_Keys[index].PressTwice)
@@ -89,8 +94,12 @@ namespace Script
                 else if (i != index)
                     secondIndex = i;
             }
-            if (m_Keys[firstIndex].HasMoved && m_Keys[firstIndex].color == Player.NerfColor.Orange)
-                InvertLetters(m_Keys[firstIndex], m_Keys[secondIndex]);
+
+            if (orangesHasMoved)
+            {
+                orangesHasMoved = false;
+                InvertLetters(m_Keys[firstIndex], m_Keys[secondIndex], true);
+            }
 
             index = 0;
         }
@@ -103,12 +112,21 @@ namespace Script
 
             m_Keys.RemoveRange(0, m_Keys.Count);
             index = 0;
+            orangesHasMoved = false;
         }
 
-        void InvertLetters(KeyFX one, KeyFX two)
+        void InvertLetters(KeyFX one, KeyFX two, bool cancel = false)
         {
-            one.transform.DOJump(two.transform.position, 1f, 1, 0.2f);
-            two.transform.DOJump(one.transform.position, 1f, 1, 0.2f);
+            if (cancel)
+            {
+                one.transform.DOJump(one.InitPos, 1f, 1, 0.2f);
+                two.transform.DOJump(two.InitPos, 1f, 1, 0.2f);
+            }
+            else
+            {
+                one.transform.DOJump(two.transform.position, 1f, 1, 0.2f);
+                two.transform.DOJump(one.transform.position, 1f, 1, 0.2f);
+            }
         }
     }
 }

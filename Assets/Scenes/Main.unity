@@ -6495,7 +6495,6 @@ MonoBehaviour:
   finalScorePanel: {fileID: 746879966}
   currentScore: {fileID: 1116202260}
   bestScore: {fileID: 1240997658}
-  scoreOffset: 0
 --- !u!4 &775342164
 Transform:
   m_ObjectHideFlags: 0
