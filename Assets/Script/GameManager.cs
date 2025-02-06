@@ -14,6 +14,7 @@ namespace Script
         [SerializeField] Player player;
         [SerializeField] WordList wordList;
         [SerializeField] PhaseDatabase phases;
+        [SerializeField] GameObject pausePanel;
 
         [Header("Enemy Settings")]
         [SerializeField] Transform spawn;
@@ -25,7 +26,6 @@ namespace Script
         [SerializeField] RectTransform finalScorePanel;
         [SerializeField] TextMeshProUGUI currentScore;
         [SerializeField] TextMeshProUGUI bestScore;
-        [SerializeField] float scoreOffset;
 
         int m_WaveCount;
         int m_BestWave;
@@ -99,29 +99,43 @@ namespace Script
             yield return new WaitForSeconds(2f);
 
             bestScore.text = m_BestWave.ToString();
-            currentScore.text = m_WaveCount.ToString();
-            finalScorePanel.DOMoveY(Screen.height - finalScorePanel.rect.height/2 - scoreOffset, .5f);
+            DisplayScore();
             player.SetWord("rejouer", false);
         }
-
+        
         public void RestartGame()
         {
             m_WaveCount = 0;
             player.Revive();
-            finalScorePanel.DOMoveY(Screen.height + finalScorePanel.rect.height/2 + scoreOffset, .5f);
+            HideScore();
             StartCoroutine(StartGame());
         }
 
+        void DisplayScore()
+        {
+            currentScore.text = m_WaveCount.ToString();
+            finalScorePanel.DOMoveY(Screen.height - finalScorePanel.rect.height/3, .5f).SetUpdate(true);
+        }
+
+        void HideScore()
+        {
+            finalScorePanel.DOMoveY(Screen.height + finalScorePanel.rect.height/3, .5f).SetUpdate(true);
+        }
+        
         public void TogglePause()
         {
             if (m_GamePaused)
             {
                 Time.timeScale = 1f;
+                pausePanel.SetActive(false);
+                HideScore();
                 m_GamePaused = false;
             }
             else
             {
                 Time.timeScale = 0f;
+                pausePanel.SetActive(true);
+                DisplayScore();
                 m_GamePaused = true;
             }
         }

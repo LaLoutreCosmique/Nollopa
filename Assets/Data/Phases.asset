@@ -13,10 +13,8 @@ MonoBehaviour:
   m_Name: Phases
   m_EditorClassIdentifier: 
   data:
-  - {fileID: 11400000, guid: d51df0d8da7026d4b8cda0bdeaeb3e83, type: 2}
-  - {fileID: 11400000, guid: c057d07f003544942aa36adbdd4bfe17, type: 2}
-  - {fileID: 11400000, guid: c057d07f003544942aa36adbdd4bfe17, type: 2}
-  - {fileID: 11400000, guid: c057d07f003544942aa36adbdd4bfe17, type: 2}
+  - {fileID: 11400000, guid: d7d0569a3009af74b80fa75bcd7e22ae, type: 2}
+  - {fileID: 11400000, guid: d7d0569a3009af74b80fa75bcd7e22ae, type: 2}
   - {fileID: 11400000, guid: d7d0569a3009af74b80fa75bcd7e22ae, type: 2}
   - {fileID: 11400000, guid: d7d0569a3009af74b80fa75bcd7e22ae, type: 2}
   - {fileID: 11400000, guid: d7d0569a3009af74b80fa75bcd7e22ae, type: 2}
