@@ -13,14 +13,11 @@ namespace Script
         
         [SerializeField] Player player;
         [SerializeField] WordList wordList;
-        [SerializeField] int easyThreshold;
-        [SerializeField] int mediumThreshold;
-        [SerializeField] int hardThreshold;
+        [SerializeField] PhaseDatabase phases;
 
         [Header("Enemy Settings")]
         [SerializeField] Transform spawn;
         [SerializeField] Transform target;
-        [SerializeField] Enemy enemy;
         [SerializeField] ParticleSystem enemyDeathParticle;
         [SerializeField] Image fillTimer;
 
@@ -30,8 +27,13 @@ namespace Script
         [SerializeField] TextMeshProUGUI bestScore;
         [SerializeField] float scoreOffset;
 
-        int waveCount;
-        int bestWave;
+        int m_WaveCount;
+        int m_BestWave;
+        bool m_GamePaused;
+
+        public PhaseData CurrentPhase => phases.data[m_WaveCount - 1];
+        public bool FreezeTimer => CurrentPhase.freezeTimer;
+        public bool GamePaused => m_GamePaused;
 
         void Awake()
         {
@@ -59,8 +61,8 @@ namespace Script
 
         void StartWave()
         {
-            waveCount++;
-            Enemy newEnemy = Instantiate(enemy, spawn.position, Quaternion.identity).Init(target.position, player, enemyDeathParticle, fillTimer);
+            m_WaveCount++;
+            Enemy newEnemy = Instantiate(CurrentPhase.enemy, spawn.position, Quaternion.identity).Init(target.position, player, enemyDeathParticle, fillTimer);
             newEnemy.OnPosition.AddListener(delegate{StartAttack(newEnemy);});
             newEnemy.OnDie.AddListener(OnEnemyKilled);
         }
@@ -80,15 +82,15 @@ namespace Script
             return difficulty switch
             {
                 Difficulty.Easy => wordList.shortWords[Random.Range(0, wordList.shortWords.Length)],
-                Difficulty.Medium => wordList.mediumWords[Random.Range(0, wordList.shortWords.Length)],
-                Difficulty.Hard => wordList.longWords[Random.Range(0, wordList.shortWords.Length)],
+                Difficulty.Medium => wordList.mediumWords[Random.Range(0, wordList.mediumWords.Length)],
+                Difficulty.Hard => wordList.longWords[Random.Range(0, wordList.longWords.Length)],
                 _ => null
             };
         }
 
         void GameOver()
         {
-            if (bestWave < waveCount) bestWave = waveCount;
+            if (m_BestWave < m_WaveCount) m_BestWave = m_WaveCount;
             StartCoroutine(DisplayEndElements());
         }
 
@@ -96,18 +98,32 @@ namespace Script
         {
             yield return new WaitForSeconds(2f);
 
-            bestScore.text = bestWave.ToString();
-            currentScore.text = waveCount.ToString();
+            bestScore.text = m_BestWave.ToString();
+            currentScore.text = m_WaveCount.ToString();
             finalScorePanel.DOMoveY(Screen.height - finalScorePanel.rect.height/2 - scoreOffset, .5f);
-            player.SetWord("restart");
+            player.SetWord("rejouer", false);
         }
 
         public void RestartGame()
         {
-            waveCount = 0;
+            m_WaveCount = 0;
             player.Revive();
             finalScorePanel.DOMoveY(Screen.height + finalScorePanel.rect.height/2 + scoreOffset, .5f);
             StartCoroutine(StartGame());
+        }
+
+        public void TogglePause()
+        {
+            if (m_GamePaused)
+            {
+                Time.timeScale = 1f;
+                m_GamePaused = false;
+            }
+            else
+            {
+                Time.timeScale = 0f;
+                m_GamePaused = true;
+            }
         }
     }
 

@@ -6410,9 +6410,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 579731272}
   wordList: {fileID: 11400000, guid: 30e6137b951b2c34988eb80c4810e937, type: 2}
-  easyThreshold: 5
-  mediumThreshold: 10
-  hardThreshold: 15
+  phases: {fileID: 11400000, guid: 63de1190d22b8aa46881969ee7cd71b0, type: 2}
   spawn: {fileID: 1290229760}
   target: {fileID: 1536268250}
   enemy: {fileID: 6650522470071522568, guid: e23d8c80323c23a4aa1c21d506ffc89e, type: 3}
@@ -6421,7 +6419,7 @@ MonoBehaviour:
   finalScorePanel: {fileID: 746879966}
   currentScore: {fileID: 1116202260}
   bestScore: {fileID: 1240997658}
-  scoreOffset: 50
+  scoreOffset: 0
 --- !u!4 &775342164
 Transform:
   m_ObjectHideFlags: 0

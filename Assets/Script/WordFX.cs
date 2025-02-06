@@ -1,9 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
-using TMPro;
 using UnityEngine;
 
 namespace Script
@@ -17,13 +15,18 @@ namespace Script
         int index;
         bool canShake = true;
 
-        public IEnumerator DisplayWord(string word)
+        public IEnumerator DisplayWord(string word, Dictionary<int, Player.NerfColor> nerfData)
         {
             canShake = false;
             for (int i = 0; i < word.Length; i++)
             {
                 Vector3 keyPosition = new Vector3((i - (word.Length - 1) / 2.0f) * padding, 3);
-                m_Keys.Add(Instantiate(keyPrefab, transform).Init(word.ToCharArray()[i], keyPosition));
+
+                m_Keys.Add(nerfData.TryGetValue(i, out Player.NerfColor color)
+                    ? Instantiate(keyPrefab, transform).Init(word.ToCharArray()[i], keyPosition, color)
+                    : Instantiate(keyPrefab, transform)
+                        .Init(word.ToCharArray()[i], keyPosition, Player.NerfColor.Black));
+
                 SoundFX.Instance.PlaySound(SoundType.DisplayLetter);
                 yield return new WaitForSeconds(0.07f);
             }
@@ -33,6 +36,16 @@ namespace Script
 
         public void Press()
         {
+            if (m_Keys[index].color == Player.NerfColor.Red)
+                index++;
+
+            if (m_Keys[index].PressTwice)
+            {
+                SoundFX.Instance.PlaySound(SoundType.ValidLetter);
+                m_Keys[index].StartShake();
+                return;
+            }
+            
             m_Keys[index].Press();
             index++;
             SoundFX.Instance.PlaySound(SoundType.ValidLetter);

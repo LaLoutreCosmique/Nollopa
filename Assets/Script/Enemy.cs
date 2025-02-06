@@ -44,7 +44,8 @@ public class Enemy : MonoBehaviour
         m_FillTimer = fillTimer;
         
         transform.DOMove(moveTo, moveDuration).SetEase(Ease.Linear).onComplete = SetReady;
-        m_AttackCooldown = new Cooldown(timeBeforeAttack, Attack, UpdateFillTimer);
+        if (!GameManager.Instance.FreezeTimer)
+            m_AttackCooldown = new Cooldown(timeBeforeAttack, Attack, UpdateFillTimer);
         DisplayHealth();
 
         return this;
@@ -63,7 +64,7 @@ public class Enemy : MonoBehaviour
     void SetReady()
     {
         OnPosition?.Invoke();
-        m_AttackCooldown.Start();
+        m_AttackCooldown?.Start();
         m_Anim.SetTrigger("Idle");
     }
 
@@ -100,7 +101,10 @@ public class Enemy : MonoBehaviour
         }
         
         health -= value;
-        m_AttackCooldown.TimeLeft += timerAdd;
+        
+        if (!GameManager.Instance.FreezeTimer)
+            m_AttackCooldown.TimeLeft += timerAdd;
+        
         m_Anim.SetTrigger("Hurt");
 
         if (!IsDead) return false;

@@ -1,11 +1,14 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace Script
 {
@@ -33,6 +36,8 @@ namespace Script
         string m_Word;
         int m_CharIndex;
         int combo;
+
+        const int EscapeKeyCode = 1769499;
 
         readonly int m_AttackAnim = Animator.StringToHash("Attack");
         readonly int m_IdleAnim = Animator.StringToHash("Idle");
@@ -67,7 +72,14 @@ namespace Script
 
         void GetKeyInput(char input)
         {
-            if (m_Word == null) return;
+            if (input.GetHashCode() == EscapeKeyCode)
+            {
+                print("OK");
+                GameManager.Instance.TogglePause();
+                return;
+            }
+            
+            if (m_Word == null || GameManager.Instance.GamePaused) return;
 
             if (input == m_Word[m_CharIndex])
             {
@@ -88,7 +100,7 @@ namespace Script
             
             if (m_Enemy != null)
                 Attack();
-            else if (m_Word == "restart")
+            else if (m_Word == "rejouer")
             {
                 GameManager.Instance.RestartGame();
                 wordFX.Finish();
@@ -144,10 +156,84 @@ namespace Script
             m_CharIndex = 0;
         }
 
-        public void SetWord(string word)
+        public void SetWord(string word, bool withNerf = true)
         {
-            m_Word = word;
-            StartCoroutine(wordFX.DisplayWord(m_Word));
+            if (!withNerf)
+            {
+                m_Word = word;
+                StartCoroutine(wordFX.DisplayWord(word, new Dictionary<int, NerfColor>()));
+                return;
+            }
+            
+            m_Word = ApplyNerf(word, out Dictionary<int, NerfColor> nerfData);
+
+            StartCoroutine(wordFX.DisplayWord(word, nerfData));
+            
+            print(m_Word);
+        }
+
+        string ApplyNerf(string word, out Dictionary<int, NerfColor> nerfData)
+        {
+            nerfData = new Dictionary<int, NerfColor>();
+            PhaseData currPhase = GameManager.Instance.CurrentPhase;
+            StringBuilder wordToWrite = new StringBuilder(word);
+            int nerfIndex;
+
+            // Red nerf
+            for (int i = 0; i < currPhase.redNerf; i++)
+            {
+                if (word.Length <= nerfData.Count + i) break;
+
+                nerfIndex = DrawIndex(nerfData.Keys.ToArray(), word.Length);
+                wordToWrite.Remove(GetIndexToModif(nerfIndex, nerfData), 1);
+                nerfData.Add(nerfIndex, NerfColor.Red);
+                
+                print("draw" + nerfIndex);
+            }
+            
+            // Green nerf
+            for (int i = 0; i < currPhase.greenNerf; i++)
+            {
+                if (word.Length <= nerfData.Count) break;
+                
+                nerfIndex = DrawIndex(nerfData.Keys.ToArray(), word.Length);
+                int indexToModif = GetIndexToModif(nerfIndex, nerfData);
+                wordToWrite.Insert(indexToModif, wordToWrite[indexToModif]);
+                nerfData.Add(nerfIndex, NerfColor.Green);
+                
+                print("draw : " + nerfIndex);
+            }
+            
+            return wordToWrite.ToString();
+        }
+        
+        int DrawIndex(int[] bannedIndexes, int maxIndex)
+        {
+            int index;
+            while (true)
+            {
+                index = Random.Range(0, maxIndex);
+                if (bannedIndexes.All(x => x != index)) return index;
+            }
+        }
+
+        int GetIndexToModif(int indexDrew, Dictionary<int, NerfColor> nerfData)
+        {
+            foreach (var nerf in nerfData.Where(nerf => indexDrew > nerf.Key))
+            {
+                switch (nerf.Value)
+                {
+                    case NerfColor.Green:
+                        indexDrew++;
+                        break;
+                    case NerfColor.Red:
+                        indexDrew--;
+                        break;
+                }
+            }
+
+            print("to modif : " + indexDrew);
+            return indexDrew;
         }
 
         /// <summary>
@@ -166,7 +252,6 @@ namespace Script
             health -= value;
             ResetCombo();
             
-            print(health);
             if (health > 0)
                 m_Anim.SetTrigger(m_HurtAnim);
             else
@@ -208,6 +293,14 @@ namespace Script
             SoundFX.Instance.PlaySound(SoundType.Disappear);
             Start();
             health = 3;
+        }
+
+        public enum NerfColor
+        {
+            Black,
+            Green,
+            Red,
+            Orange
         }
     }
 }

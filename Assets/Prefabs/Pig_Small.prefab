@@ -40,9 +40,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1530949659747296589}
+  - component: {fileID: 6650522470071522568}
   - component: {fileID: 2691752287167258071}
   - component: {fileID: 9085399704839029799}
-  - component: {fileID: 6650522470071522568}
   m_Layer: 0
   m_Name: Pig_Small
   m_TagString: Untagged
@@ -66,6 +66,31 @@ Transform:
   - {fileID: 7532208865867213324}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6650522470071522568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5866854011173499292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d418c725484226844ac9d51790da5236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnPosition:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDie:
+    m_PersistentCalls:
+      m_Calls: []
+  moveDuration: 2
+  difficulty: 0
+  health: 6
+  timeBeforeAttack: 5
+  healthPrefab: {fileID: 754787654720171342, guid: 86fea28bcb30aff43bfe4b04281aca7b, type: 3}
+  emptyHealth: {fileID: -8929440768489705544, guid: c902e08bd83e04947b6e8d7f31f385be, type: 3}
+  healthPos: {fileID: 7532208865867213324}
 --- !u!212 &2691752287167258071
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -139,28 +164,3 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6650522470071522568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5866854011173499292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d418c725484226844ac9d51790da5236, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  OnPosition:
-    m_PersistentCalls:
-      m_Calls: []
-  OnDie:
-    m_PersistentCalls:
-      m_Calls: []
-  moveDuration: 2
-  difficulty: 0
-  health: 11
-  timeBeforeAttack: 10
-  healthPrefab: {fileID: 754787654720171342, guid: 86fea28bcb30aff43bfe4b04281aca7b, type: 3}
-  emptyHealth: {fileID: -8929440768489705544, guid: c902e08bd83e04947b6e8d7f31f385be, type: 3}
-  healthPos: {fileID: 7532208865867213324}
